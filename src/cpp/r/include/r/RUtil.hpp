@@ -58,6 +58,9 @@ bool isWindowsOnlyFunction(const std::string& name);
 // Is package attached to search path?
 bool isPackageAttached(const std::string& packageName);
 
+// Active code page for the R session
+unsigned int activeCodePage();
+
 } // namespace util   
 } // namespace r
 } // namespace rstudio

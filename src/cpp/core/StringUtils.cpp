@@ -255,45 +255,65 @@ bool detectLineEndings(const FilePath& filePath, LineEnding* pType)
    return false;
 }
 
-std::string utf8ToSystem(const std::string& str,
-                         bool escapeInvalidChars)
+std::string utf8ToSystem(const std::string& utf8String)
 {
-   if (str.empty())
+   return utf8ToSystem(utf8String, CP_ACP);
+}
+
+std::string utf8ToSystem(const std::string& utf8String, unsigned int codepage)
+{
+   if (utf8String.empty())
       return std::string();
 
 #ifdef _WIN32
-   std::vector<wchar_t> wide(str.length() + 1);
-   int chars = ::MultiByteToWideChar(CP_UTF8, 0, str.c_str(), -1, &wide[0], static_cast<int>(wide.size()));
-   if (chars < 0)
+
+   // first, convert to wide (UTF-16). over-allocate a bit
+   // and give the wide string enough space to fill regardless
+   std::vector<wchar_t> wideString(utf8String.size() + 1);
+   int wideChars = ::MultiByteToWideChar(
+            CP_UTF8, 0,
+            utf8String.c_str(), (int) utf8String.size(),
+            &wideString[0], (int) wideString.size());
+   if (wideChars < 0)
    {
       LOG_ERROR(LAST_SYSTEM_ERROR());
-      return str;
+      return utf8String;
    }
 
-   std::ostringstream output;
-   char mbbuf[10];
-   // Only go up to chars - 1 because last char is \0
-   for (int i = 0; i < chars - 1; i++)
+   // now, convert back to the system codepage
+   int acpChars = ::WideCharToMultiByte(
+            codepage, 0,
+            &wideString[0], wideChars,
+            nullptr, 0,
+            nullptr, nullptr);
+
+   if (acpChars < 0)
    {
-      int mbc = wctomb(mbbuf, wide[i]);
-      if (mbc == -1)
-      {
-         if (escapeInvalidChars)
-            output << "\\u{" << std::hex << wide[i] << "}";
-         else
-            output << "?"; // TODO: Use GetCPInfo()
-      }
-      else
-         output.write(mbbuf, mbc);
+      LOG_ERROR(LAST_SYSTEM_ERROR());
+      return utf8String;
    }
-   return output.str();
+
+   std::vector<char> acpString(acpChars, 0);
+   ::WideCharToMultiByte(
+            codepage, 0,
+            &wideString[0], wideChars,
+            &acpString[0], acpChars,
+            NULL, NULL);
+
+   return std::string(acpString.begin(), acpString.end());
+
 #else
    // Assumes that UTF8 is the locale on POSIX
-   return str;
+   return utf8String;
 #endif
 }
 
-std::string systemToUtf8(const std::string& str, int codepage)
+std::string systemToUtf8(const std::string& str)
+{
+   return systemToUtf8(str, CP_ACP);
+}
+
+std::string systemToUtf8(const std::string& str, unsigned int codepage)
 {
    if (str.empty())
       return std::string();
@@ -324,11 +344,6 @@ std::string systemToUtf8(const std::string& str, int codepage)
 #else
    return str;
 #endif
-}
-
-std::string systemToUtf8(const std::string& str)
-{
-   return systemToUtf8(str, CP_ACP);
 }
 
 std::string toUpper(const std::string& str)

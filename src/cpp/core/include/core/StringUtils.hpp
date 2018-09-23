@@ -78,11 +78,11 @@ bool subsequenceIndices(std::string const& sequence,
 
 std::string getExtension(std::string const& str);
 
-std::string utf8ToSystem(const std::string& str,
-                         bool escapeInvalidChars=false);
+std::string utf8ToSystem(const std::string& str);
+std::string utf8ToSystem(const std::string& str, unsigned int codepage);
 
 std::string systemToUtf8(const std::string& str);
-std::string systemToUtf8(const std::string& str, int codepage);
+std::string systemToUtf8(const std::string& str, unsigned int codepage);
 
 std::string toLower(const std::string& str);
 std::string toUpper(const std::string& str);

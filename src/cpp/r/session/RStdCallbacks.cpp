@@ -337,7 +337,7 @@ int RReadConsole (const char *pmt,
             
             // ensure that our input fits within the buffer
             std::string::size_type maxLen = buflen - 2; // for \n\0
-            rInput = string_utils::utf8ToSystem(rInput, true);
+            rInput = string_utils::utf8ToSystem(rInput, r::util::activeCodePage());
             if (rInput.length() > maxLen)
                rInput.resize(maxLen);
             std::string::size_type inputLen = rInput.length();
