@@ -36,13 +36,17 @@
 #include <winnls.h>
 #endif
 
-#ifndef CP_ACP
-# define CP_ACP 0
-#endif
-
 namespace rstudio {
 namespace core {
 namespace string_utils {
+
+namespace {
+
+#ifdef _WIN32
+unsigned int* s_codepage = nullptr;
+#endif
+
+} // end anonymous namespace
 
 bool isTruthy(const std::string& string,
               bool valueIfEmpty)
@@ -257,7 +261,12 @@ bool detectLineEndings(const FilePath& filePath, LineEnding* pType)
 
 std::string utf8ToSystem(const std::string& utf8String)
 {
+#ifdef _WIN32
+   unsigned int codepage = s_codepage ? *s_codepage : CP_ACP;
    return utf8ToSystem(utf8String, CP_ACP);
+#else
+   return utf8ToSystem(utf8String, 0);
+#endif
 }
 
 std::string utf8ToSystem(const std::string& utf8String, unsigned int codepage)
@@ -310,7 +319,12 @@ std::string utf8ToSystem(const std::string& utf8String, unsigned int codepage)
 
 std::string systemToUtf8(const std::string& str)
 {
-   return systemToUtf8(str, CP_ACP);
+#ifdef _WIN32
+   unsigned int codepage = s_codepage ? *s_codepage : CP_ACP;
+   return systemToUtf8(str, codepage);
+#else
+   return systemToUtf8(str, 0);
+#endif
 }
 
 std::string systemToUtf8(const std::string& str, unsigned int codepage)
@@ -344,6 +358,11 @@ std::string systemToUtf8(const std::string& str, unsigned int codepage)
 #else
    return str;
 #endif
+}
+
+void setActiveCodepage(unsigned int* codepage)
+{
+   s_codepage = codepage;
 }
 
 std::string toUpper(const std::string& str)

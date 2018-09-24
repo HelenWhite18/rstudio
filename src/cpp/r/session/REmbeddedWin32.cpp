@@ -46,7 +46,8 @@ extern "C" void R_ProcessEvents(void);
 extern "C" void R_CleanUp(SA_TYPE, int, int);
 
 extern "C" {
-   __declspec(dllimport) UImode CharacterMode;
+__declspec(dllimport) UImode CharacterMode;
+__declspec(dllimport) unsigned int* localeCP;
 }
 
 using namespace rstudio::core;
@@ -191,6 +192,11 @@ void runEmbeddedR(const core::FilePath& rHome,
 
    // clear console input buffer
    ::FlushConsoleInputBuffer(GetStdHandle(STD_INPUT_HANDLE));
+
+#ifdef _WIN32
+   // let core know what R's notion of the active codepage is
+   core::string_utils::setActiveCodePage(localeCP);
+#endif
 
    // R global ui initialization
    ::GA_initapp(0, 0);

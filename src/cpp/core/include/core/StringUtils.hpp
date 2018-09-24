@@ -84,6 +84,8 @@ std::string utf8ToSystem(const std::string& str, unsigned int codepage);
 std::string systemToUtf8(const std::string& str);
 std::string systemToUtf8(const std::string& str, unsigned int codepage);
 
+void setActiveCodePage(unsigned int* pCodepage);
+
 std::string toLower(const std::string& str);
 std::string toUpper(const std::string& str);
 std::string textToHtml(const std::string& str);
